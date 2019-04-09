@@ -26,5 +26,8 @@
     <ClInclude Include="read_ifc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ifc_struct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
