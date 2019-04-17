@@ -61,7 +61,7 @@ IfcItem* ReadIFC::CreateProject()
 	return project_items;
 }
 
-IfcItem * ReadIFC::CreateObject(int64_t obj_ins, IfcRelation * parent)
+IfcItem * ReadIFC::CreateObject(int64_t obj_ins, IfcConnection * parent)
 {
 	IfcItem* item = CreateItem(obj_ins, parent);
 	item->contains = CreateContains(item);
@@ -70,7 +70,7 @@ IfcItem * ReadIFC::CreateObject(int64_t obj_ins, IfcRelation * parent)
 	return item;
 }
 
-IfcItem * ReadIFC::CreateItem(int64_t instance, IfcRelation * parent)
+IfcItem * ReadIFC::CreateItem(int64_t instance, IfcConnection * parent)
 {
 	IfcItem* item = new IfcItem();
 
@@ -124,17 +124,77 @@ IfcContains * ReadIFC::CreateContains(IfcItem * item)
 			if (!obj_ins)
 				continue;
 
-			IfcItem* obj_item = CreateObject(obj_ins, )
+			IfcItem* obj_item = CreateObject(obj_ins, rel_contains);
+			obj_item->next = rel_contains->items;
+			contains->items = obj_item;
 		}
 	}
+
+	return contains;
 }
 
 IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item)
 {
-	return nullptr;
+	IfcDecomposedBy* decomposed_by = nullptr;
+	int_t* ifc_rel_decomposed_by = nullptr;
+	int ifc_rel_decomposed_by_cnt = 0;
+
+	sdaiGetAttrBN(item->instance, "IsDecomposedBy", sdaiAGGR, &ifc_rel_decomposed_by);
+	if (nullptr == ifc_rel_decomposed_by)
+		return nullptr;
+
+	ifc_rel_decomposed_by_cnt = sdaiGetMemberCount(ifc_rel_decomposed_by);
+	for (int i = 0; i < ifc_rel_decomposed_by_cnt; i++)
+	{
+		int_t rel_decomposed_by_ins = 0;
+		engiGetAggrElement(ifc_rel_decomposed_by, i, sdaiINSTANCE, &rel_decomposed_by_ins);
+		if (rel_aggregates_type != sdaiGetInstanceType(rel_decomposed_by_ins))
+			continue;
+
+		int_t* obj_instances = nullptr;
+		sdaiGetAttrBN(rel_decomposed_by_ins, "RelatedObjects", sdaiAGGR, &obj_instances);
+		int_t obj_ins_cnt = sdaiGetMemberCount(obj_instances);
+		if (0 == obj_ins_cnt)
+			continue;
+
+		IfcDecomposedBy* decomposed_by_ins = CreateRelDecomposedBy(rel_decomposed_by_ins, item);
+		decomposed_by_ins->next = decomposed_by;
+		decomposed_by = decomposed_by_ins;
+
+		for (int j = 0; j < obj_ins_cnt; j++)
+		{
+			int_t obj_ins = 0;
+			engiGetAggrElement(obj_instances, j, sdaiINSTANCE, &obj_ins);
+			IfcItem* item = CreateObject(obj_ins, decomposed_by_ins);
+
+			item->next = decomposed_by_ins->items;
+			decomposed_by_ins->items = item;
+		}
+	}
+
+	return decomposed_by;
 }
 
 IfcContains * ReadIFC::CreateRelationContains(int64_t ins, IfcItem * parent)
 {
-	return nullptr;
+	IfcContains* contains = new IfcContains();
+
+	contains->model = model;
+	contains->items = nullptr;
+	contains->parent = parent;
+	contains->next = nullptr;
+
+	return contains;
+}
+
+IfcDecomposedBy * ReadIFC::CreateRelDecomposedBy(int64_t ins, IfcItem * parent)
+{
+	IfcDecomposedBy* decomposed_by = new IfcDecomposedBy();
+
+	decomposed_by->model = model;
+	decomposed_by->items = nullptr;
+	decomposed_by->parent = parent;
+	decomposed_by->next = nullptr;
+
+	return decomposed_by;
 }

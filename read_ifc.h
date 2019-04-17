@@ -29,13 +29,14 @@ private:
 	IfcItem* CreateProject();
 	IfcItem* CreateObject(
 		int64_t obj_ins,
-		IfcRelation* parent);
+		IfcConnection* parent);
 	IfcItem * CreateItem(
 		int64_t instance,
-		IfcRelation * parent);
+		IfcConnection* parent);
 	IfcContains* CreateContains(IfcItem* item);
 	IfcDecomposedBy* CreateDecomposedBy(IfcItem* item);
 	IfcContains* CreateRelationContains(int64_t ins, IfcItem* parent);
+	IfcDecomposedBy* CreateRelDecomposedBy(int64_t ins, IfcItem* parent);
 };
 
 #endif

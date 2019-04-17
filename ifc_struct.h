@@ -21,36 +21,32 @@ struct IfcItem
 	int64_t instance;
 	char* global_id;
 	bool is_base;
-	IfcContains* contains;
-	IfcDecomposedBy* decomposed_by;
-	IfcRelation* parent;
+	IfcConnection* contains;
+	IfcConnection* decomposed_by;
+	IfcConnection* parent;
 	IfcItem* next;
 };
 
-struct IfcContains
+struct IfcConnection
 {
-	IfcType type;
+	//IfcType type;
 	int64_t model;
 	IfcItem* items;
 	IfcItem* parent;
+};
+
+struct IfcContains : IfcConnection
+{
 	IfcContains* next;
 };
 
-struct IfcDecomposedBy
+struct IfcDecomposedBy : IfcConnection
 {
-	IfcType type;
-	int64_t model;
-	IfcItem* items;
-	IfcItem* parent;
 	IfcDecomposedBy* next;
 };
 
-struct IfcRelation
+struct IfcRelation : IfcConnection
 {
-	IfcType type;
-	int64_t model;
-	IfcItem* items;
-	IfcItem* parent;
 	IfcRelation* next;
 };
 
