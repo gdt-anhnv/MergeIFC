@@ -21,15 +21,7 @@ ReadIFC::~ReadIFC()
 
 void ReadIFC::Parse()
 {
-	wchar_t* schema = new wchar_t[wcslen(L"D:\\Team TP HCM\\Projects\\MergeIFC\\x64\\Debug\\IFC2X3_TC1.exp") + 1];
-	memcpy(&schema[0], L"D:\\Team TP HCM\\Projects\\MergeIFC\\x64\\Debug\\IFC2X3_TC1.exp", sizeof(wchar_t));
-
-	wchar_t* fp = new wchar_t[wcslen(filename.c_str()) + 1];
-	memcpy(fp, filename.c_str(), sizeof(wchar_t));
-
-	int64_t model = sdaiOpenModelBNUnicode(0, fp, schema);
-	delete[] schema;
-	delete[] fp;
+	model = sdaiOpenModelBNUnicode(0, (void*)filename.c_str(), L"D:\\Github\\MergeIFC\\ifcengine\\schema\\IFC4.exp");
 
 	if (!model)
 		return;

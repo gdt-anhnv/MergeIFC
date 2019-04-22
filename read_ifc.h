@@ -7,6 +7,7 @@
 struct IfcItem;
 struct IfcRelation;
 struct IfcContains;
+struct IfcConnection;
 struct IfcDecomposedBy;
 class ReadIFC
 {

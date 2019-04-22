@@ -8,7 +8,8 @@
 
 int main()
 {
-	int_t model_1 = sdaiOpenModelBNUnicode(0, );
+	ReadIFC read_ifc(L"C:\\Users\\nguye\\Desktop\\1plant.ifc");
+	read_ifc.Parse();
 
 	return 0;
 }
