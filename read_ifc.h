@@ -1,6 +1,9 @@
 #ifndef _READ_IFC_H_
 #define _READ_IFC_H_
 
+#include "ifcengine/include/engine.h"
+#include "ifcengine/include/ifcengine.h"
+
 #include <iostream>
 #include <string>
 
@@ -14,17 +17,20 @@ class ReadIFC
 private:
 	std::wstring filename;
 	IfcItem* ifc_model;
-	int64_t model;
+	int_t model;
 
-	int64_t rel_aggregates_type;
-	int64_t rel_contained_in_spatial_struct;
-	int64_t site_type;
+	int_t rel_aggregates_type;
+	int_t rel_contained_in_spatial_struct;
+	int_t site_type;
 
 public:
 	ReadIFC(const std::wstring& fn);
 	~ReadIFC();
 
 	void Parse();
+
+	IfcItem* GetStructure() const;
+	int_t GetModel() const;
 
 private:
 	IfcItem* CreateProject();

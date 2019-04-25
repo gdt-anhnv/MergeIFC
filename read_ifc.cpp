@@ -21,12 +21,22 @@ ReadIFC::~ReadIFC()
 
 void ReadIFC::Parse()
 {
-	model = sdaiOpenModelBNUnicode(0, (void*)filename.c_str(), L"D:\\Github\\MergeIFC\\ifcengine\\schema\\IFC4.exp");
+	model = sdaiOpenModelBNUnicode(0, (void*)filename.c_str(), L"D:\\Github\\MergeIFC\\x64\\Debug\\IFC4_ADD2.exp");
 
 	if (!model)
 		return;
 
 	ifc_model = CreateProject();
+}
+
+IfcItem * ReadIFC::GetStructure() const
+{
+	return ifc_model;
+}
+
+int_t ReadIFC::GetModel() const
+{
+	return model;
 }
 
 IfcItem* ReadIFC::CreateProject()
@@ -42,7 +52,7 @@ IfcItem* ReadIFC::CreateProject()
 
 	for (int i = 0; i < num_proj_instances; i++)
 	{
-		int proj_ins = 0;
+		int_t proj_ins = 0;
 		engiGetAggrElement(proj_instances, i, sdaiINSTANCE, &proj_ins);
 		IfcItem* proj_item = CreateObject(proj_ins, nullptr);
 
@@ -53,7 +63,7 @@ IfcItem* ReadIFC::CreateProject()
 	return project_items;
 }
 
-IfcItem * ReadIFC::CreateObject(int64_t obj_ins, IfcConnection * parent)
+IfcItem * ReadIFC::CreateObject(int_t obj_ins, IfcConnection * parent)
 {
 	IfcItem* item = CreateItem(obj_ins, parent);
 	item->contains = CreateContains(item);
@@ -62,7 +72,7 @@ IfcItem * ReadIFC::CreateObject(int64_t obj_ins, IfcConnection * parent)
 	return item;
 }
 
-IfcItem * ReadIFC::CreateItem(int64_t instance, IfcConnection * parent)
+IfcItem * ReadIFC::CreateItem(int_t instance, IfcConnection * parent)
 {
 	IfcItem* item = new IfcItem();
 
@@ -85,9 +95,9 @@ IfcItem * ReadIFC::CreateItem(int64_t instance, IfcConnection * parent)
 IfcContains * ReadIFC::CreateContains(IfcItem * item)
 {
 	IfcContains* contains = nullptr;
-	int64_t* rel_spatials = nullptr;
+	int_t* rel_spatials = nullptr;
 	sdaiGetAttrBN(item->instance, "ContainsElements", sdaiAGGR, &rel_spatials);
-	int64_t rel_cnt = sdaiGetMemberCount(rel_spatials);
+	int_t rel_cnt = sdaiGetMemberCount(rel_spatials);
 
 	for (int i = 0; i < rel_cnt; i++)
 	{

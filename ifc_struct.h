@@ -1,6 +1,8 @@
 #ifndef _IFC_STRUCT_H_
 #define _IFC_STRUCT_H_
 
+#include "ifcengine/include/engdef.h"
+
 #include <iostream>
 
 enum IfcType
@@ -16,9 +18,9 @@ struct IfcRelation;
 struct IfcItem
 {
 	IfcType type;
-	int64_t model;
-	int64_t entity;
-	int64_t instance;
+	int_t model;
+	int_t entity;
+	int_t instance;
 	char* global_id;
 	bool is_base;
 	IfcConnection* contains;
@@ -30,7 +32,7 @@ struct IfcItem
 struct IfcConnection
 {
 	//IfcType type;
-	int64_t model;
+	int_t model;
 	IfcItem* items;
 	IfcItem* parent;
 };
