@@ -99,8 +99,12 @@ void CopyIfcInstance(int_t des_model, int_t source_model, int_t ins, int_t style
 				sdaiPutAttrBN(copy_ins, att_name, sdaiINTEGER, &int_val);
 			else
 			{
-
+				int_val = 1;
+				sdaiGetAttrBN(ins, att_name, sdaiINTEGER, &int_val);
+				if (0 == int_val)
+					sdaiPutAttrBN(copy_ins, att_name, sdaiINTEGER, &int_val);
 			}
+			break;
 		}
 
 	}
