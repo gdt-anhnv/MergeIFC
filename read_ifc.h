@@ -19,6 +19,7 @@ private:
 	IfcItem* ifc_model;
 	int_t model;
 
+public:
 	int_t rel_aggregates_type;
 	int_t rel_contained_in_spatial_struct;
 	int_t site_type;
@@ -32,18 +33,39 @@ public:
 	IfcItem* GetStructure() const;
 	int_t GetModel() const;
 
-private:
+	static IfcItem * CreateItem(
+		int_t model,
+		int_t instance,
+		int_t site_type,
+		IfcConnection* parent);
+	static IfcContains* CreateContains(
+		IfcItem* item,
+		int_t rel_contained_in_spatial_struct,
+		int_t site_type,
+		int_t rel_aggregates_type,
+		int_t model);
+	static IfcContains* CreateRelationContains(
+		int_t ins,
+		int_t model,
+		IfcItem* parent);
+	static IfcItem* CreateObject(
+		int_t obj_ins,
+		int_t model,
+		int_t site_type,
+		int_t rel_contained_in_spatial_struct,
+		int_t rel_aggregates_type,
+		IfcConnection* parent);
+	static IfcDecomposedBy* CreateDecomposedBy(
+		IfcItem* item,
+		int_t model,
+		int_t site_type,
+		int_t rel_contained_in_spatial_struct,
+		int_t rel_aggregates_type);
+	static IfcDecomposedBy* CreateRelDecomposedBy(
+		int_t ins,
+		int_t model,
+		IfcItem* parent);
 	IfcItem* CreateProject();
-	IfcItem* CreateObject(
-		int64_t obj_ins,
-		IfcConnection* parent);
-	IfcItem * CreateItem(
-		int64_t instance,
-		IfcConnection* parent);
-	IfcContains* CreateContains(IfcItem* item);
-	IfcDecomposedBy* CreateDecomposedBy(IfcItem* item);
-	IfcContains* CreateRelationContains(int64_t ins, IfcItem* parent);
-	IfcDecomposedBy* CreateRelDecomposedBy(int64_t ins, IfcItem* parent);
 };
 
 #endif

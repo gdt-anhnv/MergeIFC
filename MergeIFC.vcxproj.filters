@@ -21,6 +21,9 @@
     <ClCompile Include="read_ifc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ifc_struct.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="read_ifc.h">

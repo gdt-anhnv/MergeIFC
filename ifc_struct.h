@@ -15,6 +15,7 @@ enum IfcType
 struct IfcContains;
 struct IfcDecomposedBy;
 struct IfcRelation;
+struct IfcConnection;
 struct IfcItem
 {
 	IfcType type;
@@ -31,25 +32,35 @@ struct IfcItem
 
 struct IfcConnection
 {
-	//IfcType type;
+	IfcType type;
 	int_t model;
 	IfcItem* items;
 	IfcItem* parent;
+
+	IfcConnection();
+	virtual ~IfcConnection();
 };
 
-struct IfcContains : IfcConnection
+struct IfcContains : public IfcConnection
 {
 	IfcContains* next;
+
+	IfcContains();
+	~IfcContains();
 };
 
-struct IfcDecomposedBy : IfcConnection
+struct IfcDecomposedBy : public IfcConnection
 {
 	IfcDecomposedBy* next;
+	IfcDecomposedBy();
+	~IfcDecomposedBy();
 };
 
-struct IfcRelation : IfcConnection
+struct IfcRelation : public IfcConnection
 {
 	IfcRelation* next;
+	IfcRelation();
+	~IfcRelation();
 };
 
 #endif

@@ -54,7 +54,13 @@ IfcItem* ReadIFC::CreateProject()
 	{
 		int_t proj_ins = 0;
 		engiGetAggrElement(proj_instances, i, sdaiINSTANCE, &proj_ins);
-		IfcItem* proj_item = CreateObject(proj_ins, nullptr);
+		IfcItem* proj_item = CreateObject(
+			proj_ins,
+			model,
+			site_type,
+			rel_contained_in_spatial_struct,
+			rel_aggregates_type,
+			nullptr);
 
 		proj_item->next = project_items;
 		project_items = proj_item;
@@ -63,16 +69,22 @@ IfcItem* ReadIFC::CreateProject()
 	return project_items;
 }
 
-IfcItem * ReadIFC::CreateObject(int_t obj_ins, IfcConnection * parent)
+IfcItem * ReadIFC::CreateObject(
+	int_t obj_ins,
+	int_t model,
+	int_t site_type,
+	int_t rel_contained_in_spatial_struct,
+	int_t rel_aggregates_type,
+	IfcConnection * parent)
 {
-	IfcItem* item = CreateItem(obj_ins, parent);
-	item->contains = CreateContains(item);
-	item->decomposed_by = CreateDecomposedBy(item);
+	IfcItem* item = CreateItem(model, obj_ins, site_type, parent);
+	item->contains = CreateContains(item, rel_contained_in_spatial_struct, site_type, rel_aggregates_type, model);
+	item->decomposed_by = CreateDecomposedBy(item, model, site_type, rel_contained_in_spatial_struct, rel_aggregates_type);
 
 	return item;
 }
 
-IfcItem * ReadIFC::CreateItem(int_t instance, IfcConnection * parent)
+IfcItem * ReadIFC::CreateItem(int_t model, int_t instance, int_t site_type, IfcConnection * parent)
 {
 	IfcItem* item = new IfcItem();
 
@@ -92,7 +104,12 @@ IfcItem * ReadIFC::CreateItem(int_t instance, IfcConnection * parent)
 	return item;
 }
 
-IfcContains * ReadIFC::CreateContains(IfcItem * item)
+IfcContains * ReadIFC::CreateContains(
+	IfcItem * item,
+	int_t rel_contained_in_spatial_struct,
+	int_t site_type,
+	int_t rel_aggregates_type,
+	int_t model)
 {
 	IfcContains* contains = nullptr;
 	int_t* rel_spatials = nullptr;
@@ -115,7 +132,7 @@ IfcContains * ReadIFC::CreateContains(IfcItem * item)
 		if (!obj_ins_cnt)
 			continue;
 
-		IfcContains* rel_contains = CreateRelationContains(rel_spatial_ins, item);
+		IfcContains* rel_contains = CreateRelationContains(rel_spatial_ins, model, item);
 		rel_contains->next = contains;
 		contains = rel_contains;
 
@@ -126,7 +143,13 @@ IfcContains * ReadIFC::CreateContains(IfcItem * item)
 			if (!obj_ins)
 				continue;
 
-			IfcItem* obj_item = CreateObject(obj_ins, rel_contains);
+			IfcItem* obj_item = CreateObject(
+				obj_ins,
+				model,
+				site_type,
+				rel_contained_in_spatial_struct,
+				rel_aggregates_type,
+				rel_contains);
 			obj_item->next = rel_contains->items;
 			contains->items = obj_item;
 		}
@@ -135,7 +158,11 @@ IfcContains * ReadIFC::CreateContains(IfcItem * item)
 	return contains;
 }
 
-IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item)
+IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item,
+	int_t model,
+	int_t site_type,
+	int_t rel_contained_in_spatial_struct,
+	int_t rel_aggregates_type)
 {
 	IfcDecomposedBy* decomposed_by = nullptr;
 	int_t* ifc_rel_decomposed_by = nullptr;
@@ -159,7 +186,7 @@ IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item)
 		if (0 == obj_ins_cnt)
 			continue;
 
-		IfcDecomposedBy* decomposed_by_ins = CreateRelDecomposedBy(rel_decomposed_by_ins, item);
+		IfcDecomposedBy* decomposed_by_ins = CreateRelDecomposedBy(rel_decomposed_by_ins, model, item);
 		decomposed_by_ins->next = decomposed_by;
 		decomposed_by = decomposed_by_ins;
 
@@ -167,7 +194,13 @@ IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item)
 		{
 			int_t obj_ins = 0;
 			engiGetAggrElement(obj_instances, j, sdaiINSTANCE, &obj_ins);
-			IfcItem* item = CreateObject(obj_ins, decomposed_by_ins);
+			IfcItem* item = CreateObject(
+				obj_ins,
+				model,
+				site_type,
+				rel_contained_in_spatial_struct,
+				rel_aggregates_type,
+				decomposed_by_ins);
 
 			item->next = decomposed_by_ins->items;
 			decomposed_by_ins->items = item;
@@ -177,7 +210,7 @@ IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item)
 	return decomposed_by;
 }
 
-IfcContains * ReadIFC::CreateRelationContains(int64_t ins, IfcItem * parent)
+IfcContains * ReadIFC::CreateRelationContains(int_t ins, int_t model, IfcItem * parent)
 {
 	IfcContains* contains = new IfcContains();
 
@@ -189,7 +222,7 @@ IfcContains * ReadIFC::CreateRelationContains(int64_t ins, IfcItem * parent)
 	return contains;
 }
 
-IfcDecomposedBy * ReadIFC::CreateRelDecomposedBy(int64_t ins, IfcItem * parent)
+IfcDecomposedBy * ReadIFC::CreateRelDecomposedBy(int_t ins, int_t model, IfcItem * parent)
 {
 	IfcDecomposedBy* decomposed_by = new IfcDecomposedBy();
 

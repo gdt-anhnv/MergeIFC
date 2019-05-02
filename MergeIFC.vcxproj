@@ -145,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ifc_struct.cpp" />
     <ClCompile Include="read_ifc.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
