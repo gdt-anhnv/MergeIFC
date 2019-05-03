@@ -18,6 +18,9 @@ int main()
 
 	Merge(read_ifc, read_ifc2);
 
+	sdaiSaveModelBNUnicode(read_ifc.GetStructure()->model, L"C:\\Users\\nguye\\Desktop\\structure21.ifc");
+	sdaiSaveModelBNUnicode(read_ifc2.GetStructure()->model, L"C:\\Users\\nguye\\Desktop\\endplate1.ifc");
+
 	return 0;
 }
 
@@ -33,17 +36,31 @@ void Merge(ReadIFC& fifc, ReadIFC& sifc)
 int_t CopyIfcInstance(int_t des_model, int_t source_model, int_t ins, int_t styled_item)
 {
 	int_t ifc_ent = sdaiGetInstanceType(ins);
-	int_t no_arg = engiGetEntityNoArguments(ins);
+	int_t no_arg = engiGetEntityNoArguments(ifc_ent);
 
 	char* ent_name = nullptr;
-	engiGetEntityName(ins, sdaiSTRING, &ent_name);
+	engiGetEntityName(ifc_ent, sdaiSTRING, &ent_name);
 	int_t copy_ins = sdaiCreateInstanceBN(des_model, ent_name);
+
+	int_t* style_item_aggr = nullptr;
+	sdaiGetAttrBN(ins, "StyledByItem", sdaiAGGR, &style_item_aggr);
+	int_t style_item_cnt = sdaiGetMemberCount(style_item_aggr);
+	for (int i = 0; i < style_item_cnt; i++)
+	{
+		int_t style_item = 0;
+		engiGetAggrElement(style_item_aggr, i, sdaiINSTANCE, &style_item);
+		int_t copy_style_item = CopyIfcInstance(des_model, source_model, style_item, true);
+		sdaiPutAttrBN(copy_style_item, "Item", sdaiINSTANCE, (void*)copy_ins);
+	}
 
 	for (int i = 0; i < no_arg; i++)
 	{
 		char* att_name = nullptr;
 		engiGetEntityArgumentName(ifc_ent, i, sdaiSTRING, &att_name);
-		switch (engiGetAttrTypeBN(ifc_ent, att_name))
+		int_t att_type = engiGetAttrTypeBN(ins, att_name);
+		if (0 == std::string(att_name).compare("Name"))
+			att_type = 10;
+		switch (att_type)
 		{
 		case sdaiADB:
 		{
@@ -175,14 +192,16 @@ int_t CopyIfcInstance(int_t des_model, int_t source_model, int_t ins, int_t styl
 		case sdaiINSTANCE + 128:
 		{
 			int_t att_type = 0;
-			engiGetEntityArgumentType(ins, i, &att_type);
+			engiGetEntityArgumentType(ifc_ent, i, &att_type);
 
 			char* name = nullptr;
 			int_t inverse = 0;
-			engiGetEntityProperty(ins, i, &name, 0, 0, 0, 0, 0, 0, 0, 0, 0, &inverse);
+			engiGetEntityProperty(ifc_ent, i, &name, 0, 0, 0, 0, 0, 0, 0, 0, 0, &inverse);
 			if (0 == inverse)
 			{
-				int_t* my_aggr = sdaiCreateAggrBN(ins, att_name);
+				int_t* my_aggr = sdaiCreateAggrBN(copy_ins, att_name);
+				if (nullptr == my_aggr)
+					break;
 				int_t* aggr = 0;
 				sdaiGetAttrBN(ins, att_name, sdaiAGGR, &aggr);
 				int aggr_cnt = sdaiGetMemberCount(aggr);
@@ -271,17 +290,23 @@ void Explore(IfcItem * fitem, int_t site_type, IfcItem * sitem)
 		int_t ins = 0;
 		owlBuildInstance(sitem->model, sitem->instance, &ins);
 		if (!ins)
+		{
+			sitem = sitem->next;
 			continue;
+		}
 
 		int_t vertice_size = 0;
 		int_t index_ver = 0;
 		CalculateInstance(ins, &vertice_size, &index_ver, nullptr);
 
 		if (!vertice_size || !index_ver)
+		{
+			sitem = sitem->next;
 			continue;
+		}
 
-		int_t copy_ins = CopyIfcInstance(fitem->model, sitem->model, ins, false);
-		FitElement(fitem, site_type, ins, sitem);
+		int_t copy_ins = CopyIfcInstance(fitem->model, sitem->model, sitem->instance, false);
+		FitElement(fitem, site_type, copy_ins, sitem);
 
 		sitem = sitem->next;
 	}
