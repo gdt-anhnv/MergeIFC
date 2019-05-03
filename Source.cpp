@@ -58,8 +58,6 @@ int_t CopyIfcInstance(int_t des_model, int_t source_model, int_t ins, int_t styl
 		char* att_name = nullptr;
 		engiGetEntityArgumentName(ifc_ent, i, sdaiSTRING, &att_name);
 		int_t att_type = engiGetAttrTypeBN(ins, att_name);
-		if (0 == std::string(att_name).compare("Name"))
-			att_type = 10;
 		switch (att_type)
 		{
 		case sdaiADB:
