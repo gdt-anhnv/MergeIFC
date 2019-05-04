@@ -56,11 +56,11 @@ struct IfcDecomposedBy : public IfcConnection
 	~IfcDecomposedBy();
 };
 
-struct IfcRelation : public IfcConnection
-{
-	IfcRelation* next;
-	IfcRelation();
-	~IfcRelation();
-};
+//struct IfcRelation : public IfcConnection
+//{
+//	IfcRelation* next;
+//	IfcRelation();
+//	~IfcRelation();
+//};
 
 #endif

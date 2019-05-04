@@ -95,6 +95,10 @@ IfcItem * ReadIFC::CreateItem(int_t model, int_t instance, int_t site_type, IfcC
 	sdaiGetAttrBN(instance, "GlobalId", sdaiSTRING, &item->global_id);
 	item->is_base = site_type == item->entity;
 
+	char* ent_name = nullptr;
+	engiGetEntityName(item->entity, sdaiSTRING, &ent_name);
+	int_t no_arg = engiGetEntityNoArguments(item->entity);
+
 	item->contains = nullptr;
 	item->decomposed_by = nullptr;
 

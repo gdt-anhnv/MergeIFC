@@ -10,16 +10,15 @@
 void Merge(ReadIFC& fifc, ReadIFC& sifc);
 int main()
 {
-	ReadIFC read_ifc(L"C:\\Users\\nguye\\Desktop\\structure2.ifc");
+	ReadIFC read_ifc(L"C:\\Users\\nguye\\Desktop\\All20161205.ifc");
 	read_ifc.Parse();
 
-	ReadIFC read_ifc2(L"C:\\Users\\nguye\\Desktop\\endplate.ifc");
+	ReadIFC read_ifc2(L"C:\\Users\\nguye\\Desktop\\Bend_Tubing_Miter_Rolled.ifc");
 	read_ifc2.Parse();
 
 	Merge(read_ifc, read_ifc2);
 
 	sdaiSaveModelBNUnicode(read_ifc.GetStructure()->model, L"C:\\Users\\nguye\\Desktop\\structure21.ifc");
-	sdaiSaveModelBNUnicode(read_ifc2.GetStructure()->model, L"C:\\Users\\nguye\\Desktop\\endplate1.ifc");
 
 	return 0;
 }
@@ -312,7 +311,7 @@ void Explore(IfcItem * fitem, int_t site_type, IfcItem * sitem)
 
 IfcItem* FindInstanceByGlobalId(IfcItem* item, char* global_id);
 IfcItem* FindInstanceIsBase(IfcItem* item);
-IfcItem* FitElement(IfcItem* fitem, int_t site_type, int_t ins, IfcItem* sitem)
+IfcItem* FitElement(IfcItem* fitem, int_t site_type, int_t copy_ins, IfcItem* sitem)
 {
 	if (nullptr == sitem->parent || nullptr == sitem->parent->parent)
 		return sitem;
@@ -336,13 +335,13 @@ IfcItem* FitElement(IfcItem* fitem, int_t site_type, int_t ins, IfcItem* sitem)
 		}
 	}
 
-	IfcContains* contains = dynamic_cast<IfcContains*>(fitem->parent);
+	IfcContains* contains = dynamic_cast<IfcContains*>(sitem->parent);
 	if (nullptr != contains)
 	{
-		int_t rel_contained_spatial = sdaiGetInstanceAttrBN(fitem->model, "IFCRELCONTAINEDINSPATIALSTRUCTURE");
+		int_t rel_contained_spatial = sdaiCreateInstanceBN(fitem->model, "IFCRELCONTAINEDINSPATIALSTRUCTURE");
 		sdaiPutAttrBN(rel_contained_spatial, "RelatingStructure", sdaiINSTANCE, (void*)connected_item->instance);
 		int_t* my_aggr = sdaiCreateAggrBN(rel_contained_spatial, "RelatedElements");
-		sdaiAppend((int_t)my_aggr, sdaiINSTANCE, (void*)ins);
+		sdaiAppend((int_t)my_aggr, sdaiINSTANCE, (void*)copy_ins);
 		if (parent_item)
 		{
 			IfcContains* sub_contains = ReadIFC::CreateRelationContains(fitem->instance, fitem->model, parent_item);
@@ -352,16 +351,16 @@ IfcItem* FitElement(IfcItem* fitem, int_t site_type, int_t ins, IfcItem* sitem)
 		}
 	}
 
-	IfcDecomposedBy* decomposed_by = dynamic_cast<IfcDecomposedBy*>(fitem->parent);
+	IfcDecomposedBy* decomposed_by = dynamic_cast<IfcDecomposedBy*>(sitem->parent);
 	if (nullptr != decomposed_by)
 	{
 		int_t rel_aggregates_ins = sdaiCreateInstanceBN(fitem->model, "IFCRELAGGREGATES");
 		sdaiPutAttrBN(rel_aggregates_ins, "RelatingObject", sdaiINSTANCE, (void*)connected_item->instance);
 		int_t* my_aggr = sdaiCreateAggrBN(rel_aggregates_ins, "RelatedObjects");
-		sdaiAppend((int_t)my_aggr, sdaiINSTANCE, (void*)ins);
+		sdaiAppend((int_t)my_aggr, sdaiINSTANCE, (void*)copy_ins);
 		if (parent_item)
 		{
-			IfcDecomposedBy* decomposed_by = ReadIFC::CreateRelDecomposedBy(ins, fitem->model, parent_item);
+			IfcDecomposedBy* decomposed_by = ReadIFC::CreateRelDecomposedBy(copy_ins, fitem->model, parent_item);
 			decomposed_by->next = dynamic_cast<IfcDecomposedBy*>(parent_item->decomposed_by);
 			parent_item->decomposed_by = decomposed_by;
 			decomposed_by->items = connected_item;

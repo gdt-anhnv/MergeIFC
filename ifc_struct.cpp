@@ -24,10 +24,10 @@ IfcDecomposedBy::~IfcDecomposedBy()
 {
 }
 
-IfcRelation::IfcRelation()
-{
-}
-
-IfcRelation::~IfcRelation()
-{
-}
+//IfcRelation::IfcRelation()
+//{
+//}
+//
+//IfcRelation::~IfcRelation()
+//{
+//}
