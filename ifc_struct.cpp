@@ -31,3 +31,11 @@ IfcDecomposedBy::~IfcDecomposedBy()
 //IfcRelation::~IfcRelation()
 //{
 //}
+
+IfcHasProperty::IfcHasProperty()
+{
+}
+
+IfcHasProperty::~IfcHasProperty()
+{
+}

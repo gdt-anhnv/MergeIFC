@@ -148,11 +148,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ifc_struct.cpp" />
+    <ClCompile Include="merge_ifc.cpp" />
     <ClCompile Include="read_ifc.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ifc_struct.h" />
+    <ClInclude Include="merge_ifc.h" />
     <ClInclude Include="read_ifc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -4,10 +4,15 @@
 #include "ifcengine/include/engine.h"
 #include "ifcengine/include/ifcengine.h"
 
+int_t ReadIFC::rel_defined_by_properties = 0;
+
 ReadIFC::ReadIFC(const std::wstring & fn) :
 	filename(fn),
 	ifc_model(nullptr),
-	model(0)
+	model(0),
+	rel_aggregates_type(0),
+	rel_contained_in_spatial_struct(0),
+	site_type(0)
 {
 }
 
@@ -21,7 +26,7 @@ ReadIFC::~ReadIFC()
 
 void ReadIFC::Parse()
 {
-	model = sdaiOpenModelBNUnicode(0, (void*)filename.c_str(), L"D:\\Github\\MergeIFC\\x64\\Debug\\IFC4_ADD2.exp");
+	model = sdaiOpenModelBNUnicode(0, (void*)filename.c_str(), L"D:\\Github\\MergeIFC\\ifcengine\\schema\\IFC4.exp");
 
 	if (!model)
 		return;
@@ -39,11 +44,20 @@ int_t ReadIFC::GetModel() const
 	return model;
 }
 
+void ReadIFC::Release()
+{
+	if (model) {
+		cleanMemory(model, 4);
+		sdaiCloseModel(model);
+	}
+}
+
 IfcItem* ReadIFC::CreateProject()
 {
 	rel_aggregates_type = sdaiGetEntity(model, "IFCRELAGGREGATES");
 	rel_contained_in_spatial_struct = sdaiGetEntity(model, "IFCRELCONTAINEDINSPATIALSTRUCTURE");
 	site_type = sdaiGetEntity(model, "IFCSITE");
+	rel_defined_by_properties = sdaiGetEntity(model, "IFCRELDEFINESBYPROPERTIES");
 
 	IfcItem* project_items = nullptr;
 
@@ -80,6 +94,7 @@ IfcItem * ReadIFC::CreateObject(
 	IfcItem* item = CreateItem(model, obj_ins, site_type, parent);
 	item->contains = CreateContains(item, rel_contained_in_spatial_struct, site_type, rel_aggregates_type, model);
 	item->decomposed_by = CreateDecomposedBy(item, model, site_type, rel_contained_in_spatial_struct, rel_aggregates_type);
+	//item->has_properties = CreateRelProperty(item, model, site_type, rel_contained_in_spatial_struct, rel_aggregates_type);
 
 	return item;
 }
@@ -101,6 +116,7 @@ IfcItem * ReadIFC::CreateItem(int_t model, int_t instance, int_t site_type, IfcC
 
 	item->contains = nullptr;
 	item->decomposed_by = nullptr;
+	item->has_properties = nullptr;
 
 	item->parent = parent;
 	item->next = nullptr;
@@ -119,6 +135,9 @@ IfcContains * ReadIFC::CreateContains(
 	int_t* rel_spatials = nullptr;
 	sdaiGetAttrBN(item->instance, "ContainsElements", sdaiAGGR, &rel_spatials);
 	int_t rel_cnt = sdaiGetMemberCount(rel_spatials);
+
+	char* ent_name = nullptr;
+	engiGetEntityName(sdaiGetInstanceType(item->instance), sdaiSTRING, &ent_name);
 
 	for (int i = 0; i < rel_cnt; i++)
 	{
@@ -147,6 +166,8 @@ IfcContains * ReadIFC::CreateContains(
 			if (!obj_ins)
 				continue;
 
+			char* ent_name = nullptr;
+			engiGetEntityName(sdaiGetInstanceType(obj_ins), sdaiSTRING, &ent_name);
 			IfcItem* obj_item = CreateObject(
 				obj_ins,
 				model,
@@ -160,6 +181,65 @@ IfcContains * ReadIFC::CreateContains(
 	}
 
 	return contains;
+}
+
+IfcHasProperty * ReadIFC::CreateRelProperty(
+	IfcItem* item,
+	int_t model,
+	int_t site_type,
+	int_t rel_contained_in_spatial_struct,
+	int_t rel_aggregates_type)
+{
+	IfcHasProperty* has_properties = nullptr;
+	int_t* rel_defines = nullptr;
+	sdaiGetAttrBN(item->instance, "IsDefinedBy", sdaiAGGR, &rel_defines);
+	int_t rel_cnt = sdaiGetMemberCount(rel_defines);
+
+	char* ent_name = nullptr;
+	engiGetEntityName(item->entity, sdaiSTRING, &ent_name);
+
+	for (int i = 0; i < rel_cnt; i++)
+	{
+		int64_t rel_defined_ins = 0;
+		engiGetAggrElement(rel_defines, i, sdaiINSTANCE, &rel_defined_ins);
+		if (!rel_defined_ins)
+			continue;
+
+		if (sdaiGetInstanceType(rel_defined_ins) != ReadIFC::rel_defined_by_properties)
+			continue;
+
+		int64_t* obj_instances = nullptr;
+		sdaiGetAttrBN(rel_defined_ins, "RelatedObjects", sdaiAGGR, &obj_instances);
+		int64_t obj_ins_cnt = sdaiGetMemberCount(obj_instances);
+		if (!obj_ins_cnt)
+			continue;
+
+		IfcHasProperty* rel_properties = CreateRelationProperty(rel_defined_ins, model, item);
+		rel_properties->next = has_properties;
+		has_properties = rel_properties;
+
+		for (int j = 0; j < obj_ins_cnt; j++)
+		{
+			int64_t obj_ins = 0;
+			engiGetAggrElement(obj_instances, j, sdaiINSTANCE, &obj_ins);
+			if (!obj_ins)
+				continue;
+
+			char* ent_name = nullptr;
+			engiGetEntityName(sdaiGetInstanceType(obj_ins), sdaiSTRING, &ent_name);
+			IfcItem* obj_item = CreateObject(
+				obj_ins,
+				model,
+				site_type,
+				rel_contained_in_spatial_struct,
+				rel_aggregates_type,
+				rel_properties);
+			obj_item->next = rel_properties->items;
+			has_properties->items = obj_item;
+		}
+	}
+
+	return has_properties;
 }
 
 IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item,
@@ -198,6 +278,9 @@ IfcDecomposedBy * ReadIFC::CreateDecomposedBy(IfcItem * item,
 		{
 			int_t obj_ins = 0;
 			engiGetAggrElement(obj_instances, j, sdaiINSTANCE, &obj_ins);
+
+			char* ent_name = nullptr;
+			engiGetEntityName(sdaiGetInstanceType(obj_ins), sdaiSTRING, &ent_name);
 			IfcItem* item = CreateObject(
 				obj_ins,
 				model,
@@ -224,6 +307,18 @@ IfcContains * ReadIFC::CreateRelationContains(int_t ins, int_t model, IfcItem * 
 	contains->next = nullptr;
 
 	return contains;
+}
+
+IfcHasProperty * ReadIFC::CreateRelationProperty(int_t ins, int_t model, IfcItem * parent)
+{
+	IfcHasProperty* properties = new IfcHasProperty();
+
+	properties->model = model;
+	properties->items = nullptr;
+	properties->parent = parent;
+	properties->next = nullptr;
+
+	return properties;
 }
 
 IfcDecomposedBy * ReadIFC::CreateRelDecomposedBy(int_t ins, int_t model, IfcItem * parent)

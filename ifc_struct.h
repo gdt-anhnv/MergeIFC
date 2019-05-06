@@ -26,6 +26,7 @@ struct IfcItem
 	bool is_base;
 	IfcConnection* contains;
 	IfcConnection* decomposed_by;
+	IfcConnection* has_properties;
 	IfcConnection* parent;
 	IfcItem* next;
 };
@@ -54,6 +55,13 @@ struct IfcDecomposedBy : public IfcConnection
 	IfcDecomposedBy* next;
 	IfcDecomposedBy();
 	~IfcDecomposedBy();
+};
+
+struct IfcHasProperty : public IfcConnection
+{
+	IfcHasProperty* next;
+	IfcHasProperty();
+	~IfcHasProperty();
 };
 
 //struct IfcRelation : public IfcConnection
